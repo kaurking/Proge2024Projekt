@@ -6,16 +6,16 @@ from selenium.webdriver.support import expected_conditions as EC
 
 service = Service(executable_path="chromedriver.exe")
 driver = webdriver.Chrome(service=service)
+driver.get("https://barbora.ee/otsing?q=hakkliha")
 
-driver.get("https://barbora.ee/otsing?q=kodune")
-
-# Wait for elements to load if necessary (optional)
+# Oota kuniks kõik elemendid laevad
 wait = WebDriverWait(driver, 10)
 
-# Finding product names
+# leia tootenimed
 nimed = driver.find_elements(By.CSS_SELECTOR, "a.tw-break-words.tw-text-b-paragraph-sm.tw-text-neutral-900.tw-no-underline.tw-transition.tw-duration-100.tw-ease-out.hover\\:tw-text-red-600.active\\:tw-text-red-700.lg\\:tw-text-base")
 
 tootenimed = []
+# Lisa tootenimed listi 'tootenimed'
 for nimi in nimed:
     tootenimi = nimi.find_element(By.TAG_NAME, "span").text
     tootenimed.append(tootenimi)
@@ -34,8 +34,8 @@ for blokk in hinna_blokk:
     except Exception as e:
         print("Viga! Ei saanud hindu väljastada:", e)
 
-# Printing the lists of product names and prices
-print("Tootenimed:", tootenimed)
-print("Täishinnad:", täishind)
-
+print(len(tootenimed))
+print(len(täishind))
+print(tootenimed)
+print(täishind)
 driver.quit()
