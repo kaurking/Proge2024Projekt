@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Toote Hinna Otsing</title>
+</head>
+
+<body>
+    <div class="main">
+        <div class="search-container">
+            <div class="search">
+                <input type="text" id="query" class="search__input" placeholder="Otsi toodet">
+                <button id="myBtn" class="search__button" onclick="searchProduct()">
+                    <svg class="search__icon" aria-hidden="true" viewBox="0 0 24 24">
+                        <g>
+                            <path
+                                d="M21.53 20.47l-3.66-3.66C19.195 15.24 20 13.214 20 11c0-4.97-4.03-9-9-9s-9 4.03-9 9 4.03 9 9 9c2.215 0 4.24-.804 5.808-2.13l3.66 3.66c.147.146.34.22.53.22s.385-.073.53-.22c.295-.293.295-.767.002-1.06zM3.5 11c0-4.135 3.365-7.5 7.5-7.5s7.5 3.365 7.5 7.5-3.365 7.5-7.5 7.5-7.5-3.365-7.5-7.5z">
+                            </path>
+                        </g>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div class="flex-container" id="results"></div>
+    </div>
+
+    <div id="loader" class="loader-container"><div class="loader"></div></div>
+
+    <script>
+        var input = document.getElementById("query");
+
+        // Käivita otsing Enter vajutamisega
+        input.addEventListener("keypress", function (event) {
+            // Kui kasutaja vajutab "Enter"
+            if (event.key === "Enter") {
+                // Keela tavaprotsessi
+                event.preventDefault();
+                // Käivitab otsingu
+                document.getElementById("myBtn").click();
+            }
+        });
+
+        const element = document.querySelector('.loader-container');
+        function searchProduct() {
+            element.style.display = 'block';
+            const query = document.getElementById('query').value;
+            fetch('/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query }),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const resultsDiv = document.getElementById('results');
+                    resultsDiv.innerHTML = '';
+                    for (const store in data) {
+                        const table = `
+                        <div class="flex-container">
+                            <div class="table-container">
+                                <h2>${store}</h2>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Toode</th>
+                                            <th>Hind</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${data[store].map(item => `<tr><td>${item.Toode}</td><td>${item.Hind}</td></tr>`).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>`;
+                        resultsDiv.insertAdjacentHTML('beforeend', table);
+                    }
+                })
+                .catch(err => console.error(err))
+                .finally(() => {
+                    element.style.display = 'none';
+                });
+        }
+    </script>
+</body>
+
+</html>
