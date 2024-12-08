@@ -29,6 +29,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 from tabulate import tabulate
 
+# Pandas andmeraamistiku suurim ridade arv
+max_read = 20
+
 app = Flask(__name__)
 
 def selver(sisend):
@@ -78,90 +81,103 @@ def selver(sisend):
     finally:
         driver.quit()
 
-    return pd.DataFrame({'Toode': tooted, 'Hind': hinnad})
+    return pd.DataFrame({'Toode': tooted[:max_read], 'Hind': hinnad[:max_read]})
 
 def maxima(sisend):
+    # Kontrollime, kas sisend on olemas
     if sisend:
         page_num = 1
-        maxima_tootenimed = []
-        maxima_toote_hind = []
+        maxima_tootenimed = []  # List toodete nimede jaoks
+        maxima_toote_hind = []  # List toodete hindade jaoks
 
         while True:
+            # Koostame URL-i päringu jaoks
             url = f'https://www.barbora.ee/otsing?q={sisend}&page={page_num}'
             page = requests.get(url)
 
-            if page.status_code == 200:
+            if page.status_code == 200:  # Kontrollime, kas päring oli edukas
                 soup = BeautifulSoup(page.text, 'html.parser')
-                # Leiame 'script' tag-i mis sisaldab json koodi.
+                # Leiame <script>-tagi, mis sisaldab toodete JSON andmeid
                 script_tag = soup.find('script', string=re.compile(r'window\.b_productList = \[.*\];'))
 
                 if script_tag:
-                    # Eraldame JSON sõne
+                    # Eemaldame JSON andmed stringist
                     json_tekst = re.search(r'window\.b_productList = (\[.*\]);', script_tag.string).group(1)
-                    # JSON sõne listis
+                    # Parsime JSON stringi listiks
                     toote_list = json.loads(json_tekst)
                     
-                    # Kui tooteid pole annab alla
+                    # Kui tooteid ei leidu, lõpetame tsükli
                     if not toote_list:
                         break
                     
-                    # Eraldame tootenimed ja hinnad
+                    # Lisame tootenimed ja hinnad vastavatesse listidesse
                     for toode in toote_list:
                         tootenimi = toode.get('title')
                         hind = toode.get('price')
                         maxima_tootenimed.append(tootenimi)
                         maxima_toote_hind.append(hind)
                 else:
+                    # Kui <script>-tagi ei leita, lõpetame tsükli
                     break
             else:
+                # Kui päring ei olnud edukas, lõpetame tsükli
                 break
             
-            # Järgmine leht
+            # Suurendame leheküljenumbrit järgmise lehe pärimiseks
             page_num += 1
-        # Loob andmeraami
-        return pd.DataFrame({'Toode': maxima_tootenimed, 'Hind': maxima_toote_hind})
+        # Tagastame tooted ja hinnad Pandas andmeraamina
+        return pd.DataFrame({'Toode': maxima_tootenimed[:max_read], 'Hind': maxima_toote_hind[:max_read]})
 
 def rimi(sisend):
+    # Kontrollib, kas sisend on olemas
     if sisend:
         url = 'https://www.rimi.ee/epood/ee/otsing?query=' + sisend
         page = requests.get(url)
-        rimi_tootenimed = []
-        rimi_toote_hinnad = []
+        rimi_tootenimed = []  # List toodete nimede jaoks
+        rimi_toote_hinnad = []  # List toodete hindade jaoks
 
-        if page.status_code == 200:
+        if page.status_code == 200:  # Kontrollib, kas päring oli edukas
             soup = BeautifulSoup(page.text, 'html.parser')
+            # Otsime elemendid, millel on atribuut `data-gtm-eec-product`
             rimi_elements = soup.find_all(attrs={'data-gtm-eec-product': True})
             for toote_info in rimi_elements:
+                # Laeme JSON andmed elemendist
                 product_data = json.loads(toote_info['data-gtm-eec-product'])
-                nimi = product_data.get('name')
-                hind = product_data.get('price')
+                nimi = product_data.get('name')  # Toote nimi
+                hind = product_data.get('price')  # Toote hind
                 rimi_tootenimed.append(nimi)
                 rimi_toote_hinnad.append(hind)
-        # Laeme tooted ja hinnad tabelisse
-        return pd.DataFrame({'Toode': rimi_tootenimed, 'Hind': rimi_toote_hinnad})
+        # Tagastame tooted ja hinnad Pandas andmeraamina
+        return pd.DataFrame({'Toode': rimi_tootenimed[:max_read], 'Hind': rimi_toote_hinnad[:max_read]})
 
 @app.route('/')
 def index():
+    # Renderdame index.html
     return render_template('index.html')
 
 @app.route('/search', methods=['POST'])
 def search():
+    # Saame kasutaja sisendi JSON vormingus
     sisend = request.json.get('query')
     if not sisend:
+        # Tagastame veateate, kui sisend puudub
         return jsonify({"error": "Palun sisesta toode!"}), 400
 
-    # Fetch data
-    selver_data = selver(sisend)
-    maxima_data = maxima(sisend)
-    rimi_data = rimi(sisend)
+    # Pärime andmeid erinevatest kauplustest
+    selver_data = selver(sisend)  # Selveri andmed
+    maxima_data = maxima(sisend)  # Maxima andmed
+    rimi_data = rimi(sisend)  # Rimi andmed
 
+    # Koondame andmed ühte struktuuri
     data = {
         "Selver": selver_data.to_dict(orient='records'),
         "Maxima": maxima_data.to_dict(orient='records'),
         "Rimi": rimi_data.to_dict(orient='records')
     }
     
+    # Tagastame andmed JSON vormingus
     return jsonify(data)
 
 if __name__ == '__main__':
+    # Käivitame rakenduse arendusrežiimis
     app.run(debug=True)
