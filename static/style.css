@@ -1,8 +1,74 @@
-/* Ensure consistent box sizing */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+
+:root {
+    /* Light Theme Colors */
+    --base-color: #e5e5e5;
+    --search: #f4f2f2;
+    --input-text: #646464;
+    --input-placeholder: #cccccc;
+    --input-hover-focus-bg: #f0eeee;
+    --icon-color: #b4b4b4;
+
+    /* Table Colors */
+    --table-header-bg: #007bff;
+    --table-header-text: #ffffff;
+    --table-border: #dddddd;
+    --table-row-bg-alt: #f9f9f9;
+    --table-row-hover: #f1f1f1;
+
+    /* Shadows */
+    --shadow-light: rgba(0, 0, 0, 0.1);
+    --shadow-input-focus: #00000013;
+
+    /** Dark theme primary colors */
+    --color-primary-a0: #02d9dc;
+    --color-primary-a10: #4cdee0;
+    --color-primary-a20: #6de2e4;
+    --color-primary-a30: #87e7e8;
+    --color-primary-a40: #9eebeb;
+    --color-primary-a50: #b3efef;
+
+    /** Dark theme surface colors */
+    --color-surface-a0: #121212;
+    --color-surface-a10: #282828;
+    --color-surface-a20: #3f3f3f;
+    --color-surface-a30: #575757;
+    --color-surface-a40: #717171;
+    --color-surface-a50: #8b8b8b;
+}
+
+/* Dark theme class */
+[data-theme="dark"] {
+    /* Baas värvid */
+    --base-color: var(--color-surface-a10);
+    --search: var(--color-surface-a20);
+    --input-text: var(--color-surface-a50);
+    --input-placeholder: var(--color-surface-a50);
+    --input-hover-focus-bg: var(--color-surface-a20);
+    --icon-color: var(--color-surface-a40);
+
+    /* Tabeli värvid */
+    --table-header-bg: var(--color-primary-a0);
+    --table-header-text: #ffffff;
+    --table-border: var(--color-surface-a20);
+    --table-row-bg-alt: var(--color-surface-a10);
+    --table-row-hover: var(--color-surface-a20);
+
+    /* Varjud */
+    --shadow-light: rgba(0, 0, 0, 0.2);
+    --shadow-input-focus: rgba(0, 0, 0, 0.25);
+
+    /* Taust ja tekst */
+    background-color: var(--color-surface-0);
+    color: var(--color-surface-a50);
+}
+
+/* Kindlustab box sizing */
 * {
     box-sizing: border-box;
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 body {
@@ -10,14 +76,99 @@ body {
     justify-content: center;
     align-items: center;
     margin: 15px;
-    font-family: Arial, sans-serif;
-    background-color: #e5e5e5;
+    background-color: var(--base-color);
+    font-family: "Montserrat", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 900;
+    font-style: normal;
 }
+
+/** Temaatika nupp*/
+
+.themeToggle {
+    color: #bbb;
+    width: 3em;
+}
+
+.st-sunMoonThemeToggleBtn {
+    position: relative;
+    cursor: pointer;
+}
+
+.st-sunMoonThemeToggleBtn .themeToggleInput {
+    opacity: 0;
+    width: 100%;
+    aspect-ratio: 1;
+}
+
+.st-sunMoonThemeToggleBtn svg {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.4s ease;
+    transform: rotate(40deg);
+}
+
+.st-sunMoonThemeToggleBtn svg .sunMoon {
+    transform-origin: center center;
+    transition: inherit;
+    transform: scale(1);
+}
+
+.st-sunMoonThemeToggleBtn svg .sunRay {
+    transform-origin: center center;
+    transform: scale(0);
+}
+
+.st-sunMoonThemeToggleBtn svg mask>circle {
+    transition: transform 0.64s cubic-bezier(0.41, 0.64, 0.32, 1.575);
+    transform: translate(0px, 0px);
+}
+
+.st-sunMoonThemeToggleBtn svg .sunRay2 {
+    animation-delay: 0.05s !important;
+}
+
+.st-sunMoonThemeToggleBtn svg .sunRay3 {
+    animation-delay: 0.1s !important;
+}
+
+.st-sunMoonThemeToggleBtn svg .sunRay4 {
+    animation-delay: 0.17s !important;
+}
+
+.st-sunMoonThemeToggleBtn svg .sunRay5 {
+    animation-delay: 0.25s !important;
+}
+
+.st-sunMoonThemeToggleBtn svg .sunRay5 {
+    animation-delay: 0.29s !important;
+}
+
+.st-sunMoonThemeToggleBtn .themeToggleInput:checked+svg {
+    transform: rotate(90deg);
+}
+
+.st-sunMoonThemeToggleBtn .themeToggleInput:checked+svg mask>circle {
+    transform: translate(16px, -3px);
+}
+
+.st-sunMoonThemeToggleBtn .themeToggleInput:checked+svg .sunMoon {
+    transform: scale(0.55);
+}
+
+.st-sunMoonThemeToggleBtn .themeToggleInput:checked+svg .sunRay {
+    animation: showRay1832 0.4s ease 0s 1 forwards;
+}
+
 
 .main {
     width: 90vw;
     margin: 0 auto;
 }
+
+/** Otsingu riba*/
 
 .search {
     display: flex;
@@ -30,39 +181,39 @@ body {
 
 .search__input {
     font-family: inherit;
-    font-size: large;
-    background-color: #f4f2f2;
+    font-size: x-large;
+    background-color: var(--search);
     border: none;
-    color: #646464;
+    color: var(--input-text);
     padding: 0.7rem 1rem;
     border-radius: 30px;
     width: 20em;
     height: 3em;
-    margin-right: -3rem;
+    margin-right: -4rem;
 }
 
 .search__input:hover,
 .search__input:focus {
-    box-shadow: 0 0 1em #00000013;
+    box-shadow: 0 0 1em var(--shadow-input-focus);
 }
 
 .search__input:focus {
     outline: none;
-    background-color: #f0eeee;
+    background-color: var(--input-hover-focus-bg);
 }
 
 .search__input::-webkit-input-placeholder {
-    font-weight: 100;
-    color: #ccc;
+    font-weight: 400;
+    color: var(--input-placeholder);
 }
 
 .search__input:focus+.search__button {
-    background-color: #f0eeee;
+    background-color: var(--input-hover-focus-bg);
 }
 
 .search__button {
     border: none;
-    background-color: #f4f2f2;
+    background-color: var(--search);
     margin-top: 0.1em;
 }
 
@@ -71,12 +222,12 @@ body {
 }
 
 .search__icon {
-    height: 2em;
-    width: 2em;
-    fill: #b4b4b4;
+    height: 2.5em;
+    width: 2.5em;
+    fill: var(--color-primary-a20);
 }
 
-/* Flex container for the tables */
+/* Flex konteiner tabeli jaoks */
 .flex-container {
     display: flex;
     flex-wrap: wrap;
@@ -86,18 +237,18 @@ body {
     background-color: transparent;
 }
 
-/* Each table wrapper fits one column */
+/* IGa tabeli wrapper mahub ühte veergu */
 .table-wrapper {
     flex: 1 1 calc(25% - 20px);
-    /* Four columns with some spacing */
+    /* Neli veergu ruumiga */
     background-color: #fff;
-    border: 1px solid #ddd;
+    border: 1px solid var(--table-border);
     border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px var(--shadow-light);
 }
 
-/* Style for tables */
+/* Style tabelite jaoks */
 table {
     width: 100%;
     border-collapse: collapse;
@@ -105,15 +256,15 @@ table {
 }
 
 thead {
-    background-color: #007bff;
-    color: #fff;
+    background-color: var(--table-header-bg);
+    color: var(--table-header-text);
 }
 
 th,
 td {
     padding: 10px 15px;
     text-align: left;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid var(--table-border);
 }
 
 th {
@@ -121,12 +272,14 @@ th {
 }
 
 tr:nth-child(even) {
-    background-color: #f9f9f9;
+    background-color: var(--table-row-bg-alt);
 }
 
 tr:hover {
-    background-color: #f1f1f1;
+    background-color: var(--table-row-hover);
 }
+
+/** Laadija ikoon*/
 
 .loader-container {
     display: none;
@@ -163,6 +316,23 @@ tr:hover {
 .loader:after {
     animation: after6 2s infinite;
 }
+
+.loader {
+    position: absolute;
+    top: calc(50% - 1.25em);
+    left: calc(50% - 1.25em);
+}
+
+@keyframes showRay1832 {
+    0% {
+        transform: scale(0);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
 
 @keyframes before8 {
     0% {
@@ -206,13 +376,14 @@ tr:hover {
     }
 }
 
-.loader {
+#theme-toggle {
     position: absolute;
-    top: calc(50% - 1.25em);
-    left: calc(50% - 1.25em);
+    top: -2rem;
+    right: 2rem;
+    z-index: 1000;
 }
 
-/* Responsive adjustments for smaller screens */
+/* Responsive  */
 @media (max-width: 1024px) {
     .table-wrapper {
         flex: 1 1 calc(25% - 20px);
