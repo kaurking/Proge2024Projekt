@@ -396,4 +396,11 @@ tr:hover {
         flex: 1 1 100%;
         /* Üks veerg väiksemal ekraanil */
     }
+
+    #theme-toggle {
+        position: fixed;
+        top: auto;
+        bottom: 5rem;
+        right: 2rem;
+    }
 }
