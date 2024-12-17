@@ -167,6 +167,8 @@ def search():
     selver_data = selver(sisend)  # Selveri andmed
     maxima_data = maxima(sisend)  # Maxima andmed
     rimi_data = rimi(sisend)  # Rimi andmed
+    
+    
 
     # Koondame andmed ühte struktuuri
     data = {
