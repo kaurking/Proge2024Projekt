@@ -34,6 +34,7 @@ max_read = 20
 
 app = Flask(__name__)
 
+# Web scraper Selveri lehe jaoks. 
 def selver(sisend):
     # Eemaldab mingisugused kahtlased non-essential errorid seotud mingi USB jamaga (võib ära võtta, siis kood töötab, aga mingid sõnumid tulevad)
     options = webdriver.ChromeOptions()
@@ -53,9 +54,9 @@ def selver(sisend):
     hinnad = []
 
     try:
-        # Ootab veits et veebikas laeks
+        # Ootab veits, et veebikas laeks
         time.sleep(1)
-        
+
         for i in range(1):  # scrollib lihtsalt faili lõppu?
             driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
             time.sleep(2)  # ootab, et laadida contenti
@@ -89,6 +90,7 @@ def selver(sisend):
 
     return pd.DataFrame({'Toode': tooted[:max_read], 'Hind': hinnad[:max_read]})
 
+# Web scraper Prisma veebilehe jaoks. 
 def prisma(sisend):
 
     options = webdriver.ChromeOptions()
@@ -109,7 +111,7 @@ def prisma(sisend):
     hinnad = []
 
     try:
-        # Ootab veits et veebikas laeks
+        # Ootab veits et, veebikas laeks
         time.sleep(1)
 
         for i in range(1):  # scrollib lihtsalt faili lõppu?
@@ -145,6 +147,7 @@ def prisma(sisend):
 
     return pd.DataFrame({'Toode': tooted[:max_read], 'Hind': hinnad[:max_read]})
 
+# Web scraper Maxima veebilehe jaoks. 
 def maxima(sisend):
     # Kontrollime, kas sisend on olemas
     if sisend:
@@ -190,6 +193,7 @@ def maxima(sisend):
         # Tagastame tooted ja hinnad Pandas andmeraamina
         return pd.DataFrame({'Toode': maxima_tootenimed[:max_read], 'Hind': maxima_toote_hind[:max_read]})
 
+# Web scraper Rimi veebilehe jaoks. 
 def rimi(sisend):
     # Kontrollib, kas sisend on olemas
     if sisend:
