@@ -12,3 +12,8 @@ git clone https://github.com/kaurking/Proge2024Projekt.git
 cd Proge2024Projekt
 pip install -r requirements.txt
 ```
+
+#### Projekti käivitamine
+```shell
+python3 app.py
+```
