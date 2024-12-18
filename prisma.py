@@ -30,6 +30,7 @@ def prisma(sisend):
     hinnad = []
 
     try:
+        time.sleep(2)
         for i in range(1):  # scrollib lihtsalt faili lõppu?
             driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
             time.sleep(2)  # ootab, et laadida contenti

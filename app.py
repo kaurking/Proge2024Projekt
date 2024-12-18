@@ -53,6 +53,9 @@ def selver(sisend):
     hinnad = []
 
     try:
+        # Ootab veits et veebikas laeks
+        time.sleep(1)
+        
         for i in range(1):  # scrollib lihtsalt faili lõppu?
             driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
             time.sleep(2)  # ootab, et laadida contenti
@@ -106,9 +109,12 @@ def prisma(sisend):
     hinnad = []
 
     try:
+        # Ootab veits et veebikas laeks
+        time.sleep(1)
+
         for i in range(1):  # scrollib lihtsalt faili lõppu?
             driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            time.sleep(2)  # ootab, et laadida contenti
+            time.sleep(1.5)  # ootab, et laadida contenti
         
         # Prisma lehel on kõik tooded "Kaartidena". 
         tootekaart = driver.find_elements(By.CLASS_NAME, "js-shelf-item")
