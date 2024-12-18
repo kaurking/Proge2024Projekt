@@ -21,6 +21,10 @@ import re
 import pandas as pd
 import urllib.parse
 import time
+import Levenshtein
+import webbrowser
+import socket
+from threading import Timer
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
@@ -38,12 +42,9 @@ def selver(sisend):
     # Eemaldab mingisugused kahtlased non-essential errorid seotud mingi USB jamaga (võib ära võtta, siis kood töötab, aga mingid sõnumid tulevad)
     options = webdriver.ChromeOptions()
     options.add_experimental_option("excludeSwitches", ["enable-logging"])
-
-    # driver setup
     service = Service('chromedriver.exe')
     driver = webdriver.Chrome(service=service, options=options)
 
-    # Veebileht URL
     urllib.parse.quote(sisend)
     url = 'https://www.selver.ee/search?q=' + sisend
 
@@ -53,9 +54,6 @@ def selver(sisend):
     hinnad = []
 
     try:
-        # Ootab veits et veebikas laeks
-        time.sleep(1)
-        
         for i in range(1):  # scrollib lihtsalt faili lõppu?
             driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
             time.sleep(2)  # ootab, et laadida contenti
@@ -66,6 +64,8 @@ def selver(sisend):
         )
 
         for el in tootekaart:
+            if len(tooted) >= max_read:
+                break
             # Leiab Tootenime kaardist
             nimeelement = el.find_elements(By.CLASS_NAME, 'ProductCard__link')
             target_index = 1  # spetsiifiline <a> järjestus HTML-is
@@ -87,7 +87,7 @@ def selver(sisend):
     finally:
         driver.quit()
 
-    return pd.DataFrame({'Toode': tooted[:max_read], 'Hind': hinnad[:max_read]})
+    return pd.DataFrame({'Toode': tooted, 'Hind': hinnad})
 
 def prisma(sisend):
 
@@ -120,6 +120,8 @@ def prisma(sisend):
         tootekaart = driver.find_elements(By.CLASS_NAME, "js-shelf-item")
 
         for el in tootekaart:
+            if len(tooted) >= max_read:
+                break
             # Leiab Tootenime kaardist
             nimeelement = el.find_element(By.CLASS_NAME, 'name')
             tootenimi = nimeelement.text.strip()
@@ -143,7 +145,8 @@ def prisma(sisend):
     finally:
         driver.quit()
 
-    return pd.DataFrame({'Toode': tooted[:max_read], 'Hind': hinnad[:max_read]})
+    return pd.DataFrame({'Toode': tooted, 'Hind': hinnad})
+
 
 def maxima(sisend):
     # Kontrollime, kas sisend on olemas
@@ -174,6 +177,8 @@ def maxima(sisend):
                     
                     # Lisame tootenimed ja hinnad vastavatesse listidesse
                     for toode in toote_list:
+                        if len(maxima_tootenimed) >= max_read:
+                            break
                         tootenimi = toode.get('title')
                         hind = toode.get('price')
                         maxima_tootenimed.append(tootenimi)
@@ -188,7 +193,7 @@ def maxima(sisend):
             # Suurendame leheküljenumbrit järgmise lehe pärimiseks
             page_num += 1
         # Tagastame tooted ja hinnad Pandas andmeraamina
-        return pd.DataFrame({'Toode': maxima_tootenimed[:max_read], 'Hind': maxima_toote_hind[:max_read]})
+        return pd.DataFrame({'Toode': maxima_tootenimed, 'Hind': maxima_toote_hind})
 
 def rimi(sisend):
     # Kontrollib, kas sisend on olemas
@@ -203,6 +208,8 @@ def rimi(sisend):
             # Otsime elemendid, millel on atribuut `data-gtm-eec-product`
             rimi_elements = soup.find_all(attrs={'data-gtm-eec-product': True})
             for toote_info in rimi_elements:
+                if len(rimi_tootenimed) >= max_read:
+                    break
                 # Laeme JSON andmed elemendist
                 product_data = json.loads(toote_info['data-gtm-eec-product'])
                 nimi = product_data.get('name')  # Toote nimi
@@ -210,7 +217,41 @@ def rimi(sisend):
                 rimi_tootenimed.append(nimi)
                 rimi_toote_hinnad.append(hind)
         # Tagastame tooted ja hinnad Pandas andmeraamina
-        return pd.DataFrame({'Toode': rimi_tootenimed[:max_read], 'Hind': rimi_toote_hinnad[:max_read]})
+        return pd.DataFrame({'Toode': rimi_tootenimed, 'Hind': rimi_toote_hinnad})
+
+
+def ümberjärjesta_andmetabel(viide_df, siht_df):
+    # Tulemuse salvestamiseks tühi list
+    ümberjärjestatud_andmed = []
+    
+    # Juba kasutatud indeksid, et vältida kordusi
+    kasutatud_indeksid = set()
+    
+    # Itereerime läbi kõik viite-andmetabeli tooted
+    for viide_toode in viide_df['Toode']:
+        lähim_ühilduvus = None  # Kõige sarnasem leitud siht-toode
+        lähim_kaugus = float('inf')  # Kõige väiksem Levenshtein'i kaugus
+        lähim_indeks = -1  # Indeks siht-andmetabelis, mis vastab kõige sarnasemale tootele
+        
+        # Võrdleme iga viite-toodet kõigi siht-tabeli toodetega
+        for idx, siht_toode in enumerate(siht_df['Toode']):
+            if idx not in kasutatud_indeksid:  # Kontrollime, et indeksit poleks juba kasutatud
+                kaugus = Levenshtein.distance(viide_toode, siht_toode)  # Levenshtein'i kauguse arvutus
+                if kaugus < lähim_kaugus:  # Uuendame, kui leitud on väiksem kaugus
+                    lähim_kaugus = kaugus
+                    lähim_ühilduvus = siht_toode
+                    lähim_indeks = idx
+        
+        # Kui lähim vaste leiti, lisame selle rea ümberjärjestatud andmetesse
+        if lähim_ühilduvus is not None:
+            lähim_rida = siht_df.iloc[lähim_indeks]  # Võtame rea siht-andmetabelist
+            ümberjärjestatud_andmed.append(lähim_rida)  # Lisame tulemuste hulka
+            kasutatud_indeksid.add(lähim_indeks)  # Märgime indeksi kasutatuks
+    
+    # Loome uue DataFrame'i ümberjärjestatud andmetega ja lähtestame indeksid
+    return pd.DataFrame(ümberjärjestatud_andmed).reset_index(drop=True)
+
+
 
 @app.route('/')
 def index():
@@ -225,23 +266,40 @@ def search():
         # Tagastame veateate, kui sisend puudub
         return jsonify({"error": "Palun sisesta toode!"}), 400
 
-    # Pärime andmeid erinevatest kauplustest
+    # Pärib andmeid erinevatest kauplustest
     selver_data = selver(sisend)  # Selveri andmed
     maxima_data = maxima(sisend)  # Maxima andmed
     rimi_data = rimi(sisend)  # Rimi andmed
+    prisma_data = prisma(sisend)
     
-    
+    selver_data = ümberjärjesta_andmetabel(maxima_data, selver_data)
+    prisma_data = ümberjärjesta_andmetabel(maxima_data, prisma_data)
+    rimi_data = ümberjärjesta_andmetabel(maxima_data, rimi_data)
 
-    # Koondame andmed ühte struktuuri
+
+    # Koondab andmed ühte struktuuri
     data = {
         "Selver": selver_data.to_dict(orient='records'),
         "Maxima": maxima_data.to_dict(orient='records'),
-        "Rimi": rimi_data.to_dict(orient='records')
+        "Rimi": rimi_data.to_dict(orient='records'),
+        "Prisma": prisma_data.to_dict(orient='records')
     }
     
     # Tagastame andmed JSON vormingus
     return jsonify(data)
 
+
+def find_free_port():
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(('', 0))
+        return s.getsockname()[1]
+
 if __name__ == '__main__':
-    # Käivitame rakenduse arendusrežiimis
-    app.run(debug=True)
+    port = find_free_port()
+    url = f"http://127.0.0.1:{port}/"
+
+    def open_browser():
+        webbrowser.open_new(url)
+
+    Timer(1, open_browser).start()
+    app.run(debug=True, port=port)
